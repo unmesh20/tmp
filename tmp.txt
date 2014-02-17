@@ -1,0 +1,27 @@
+export ENDPOINT=172.16.0.1 
+export SERVICE_TOKEN=ADMIN 
+export SERVICE_ENDPOINT=http://${ENDPOINT}:35357/v2.0
+
+keystone tenant-create --name service --description "Service Tenant" --enabled true
+
+SERVICE_TENANT_ID=$(keystone tenant-list | awk '/\ service\ / {print $2}')
+
+keystone user-create --name nova --pass nova --tenant_id $SERVICE_TENANT_ID --email nova@localhost --enabled true 
+
+keystone user-create --name glance --pass glance      --tenant_id $SERVICE_TENANT_ID      --email glance@localhost --enabled true
+
+keystone user-create --name keystone --pass keystone      --tenant_id $SERVICE_TENANT_ID --email      keystone@localhost --enabled true
+
+USER_ID=$(keystone user-list | awk '/\ nova\ / {print $2}')
+
+ROLE_ID=$(keystone role-list | awk '/\ admin\ /      {print $2}')
+
+keystone user-role-add --user $USER_ID --role $ROLE_ID      --tenant_id $SERVICE_TENANT_ID
+
+USER_ID=$(keystone user-list | awk '/\ glance\ /      {print $2}')
+
+keystone user-role-add --user $USER_ID --role $ROLE_ID      --tenant_id $SERVICE_TENANT_ID
+
+USER_ID=$(keystone user-list | awk '/\ keystone\ /      {print $2}')
+
+keystone user-role-add --user $USER_ID --role $ROLE_ID      --tenant_id $SERVICE_TENANT_ID
